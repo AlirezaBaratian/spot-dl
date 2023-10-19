@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import requests
 
 client_id = "929351d861394e70b4c2dd1e9cd524cb"
