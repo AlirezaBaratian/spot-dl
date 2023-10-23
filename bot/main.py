@@ -5,28 +5,34 @@ import logging
 from typing import Dict
 from dotenv import load_dotenv
 import os
+from typing import Dict
 
 load_dotenv()
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-access_token = "BQCzkUXYzKs7Jev9vAlm1ts64HW3vig3Hj5yv3IaThpVOtnmXVtvtspj--ohvIAc7v34P1w7bZhYrYLP92yvwjJuL9MTMMVIO_URe6E3m_MkjgVWyXI"
+access_token = os.environ.get("SPOTIFY_ACCESS_TOKEN")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     first_name = update.effective_user.first_name
 
-    await update.message.reply_text(text=f"🤗 Welcome, {first_name}!", reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardMarkup([["About", "Contact", "Guide", "Get Music Data"]], True, True, False, "Select an option:", False))
+    await update.message.reply_text(text=f"🤗 Welcome, {first_name}!", reply_to_message_id=update.message.message_id, reply_markup=ReplyKeyboardMarkup([["🪀 Get Music Data"]], True, True, False, "Select an option:", False))
 
 async def wrong_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(text="⛔️ Wrong message!")
 
+async def send_error(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(text="⚠️ An error occured!\n↘️ Try again.")
+
+async def get_url_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text(text="🧢 Send me a Spotify track url. \n🖇 Example: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT?si=2edaedb9ac174e94", disable_web_page_preview=True)
+
 def get_id(url: str) -> str:
     url_list: list = url.split("://")[1].split("/")
-    type: str = url_list[1]
-    id: str = url_list[2]
+    id: str = url_list[2].split("?")[0]
     return id
 
-def get_info(str: id) -> None:
+def get_info(id: str) -> bool | Dict:
     url: str = f"https://api.spotify.com/v1/tracks/{id}"
     headers: Dict = {
         "Authorization": f"Bearer {access_token}"
@@ -34,7 +40,23 @@ def get_info(str: id) -> None:
 
     r = requests.get(url=url, headers=headers)
 
-    print(f'HTTP {r.status_code} {r.text}')
+    if r.status_code == 200:
+        return r.json()
+    else:
+        return False
+    
+def parse_track_data(track_data: Dict)-> Dict:
+    return {
+        "artist": track_data["artists"][0]["name"],
+        "name": track_data["name"],
+        "image": track_data["album"]["images"][0]["url"]
+    }
+
+async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: Dict ={}) -> None:
+    name = track_data["name"]
+    artist = track_data["artist"]
+    photo_url: str = track_data["image"]
+    await update.message.reply_photo(photo_url, caption=f"🎤 Artist: {artist}\n🎧 Track: {name}")
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text: str = update.message.text
@@ -42,9 +64,16 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if text.startswith("https://"):
         url: str = text
         id:str = get_id(url)
-        get_info(id)
+
+        if not get_info(id):
+            await send_error(context, update)
+        else:
+            await send_track_info(update, context, track_data=parse_track_data(get_info(id)))
     else:
-        await wrong_text(update, context)
+        if text == "🪀 Get Music Data":
+            await get_url_prompt(update, context)
+        else:
+            await wrong_text(update, context)
 
 bot_token: str = os.getenv("BOT_TOKEN")
 app = ApplicationBuilder().token(bot_token).build()
