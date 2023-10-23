@@ -10,7 +10,7 @@ load_dotenv()
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-access_token = "BQBl8FplsABUQRYYUFS8XlC_r-YNKPMp7nB-V3-ugmI4BSmGG6AXa12h_u_IunhKTz3S9EP3BfqoY6BrgRUWT7Kc4tpKROmrRKBo_IEHZ4te0nu-miQ"
+access_token = "BQCzkUXYzKs7Jev9vAlm1ts64HW3vig3Hj5yv3IaThpVOtnmXVtvtspj--ohvIAc7v34P1w7bZhYrYLP92yvwjJuL9MTMMVIO_URe6E3m_MkjgVWyXI"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     first_name = update.effective_user.first_name
@@ -37,7 +37,6 @@ def get_info(str: id) -> None:
     print(f'HTTP {r.status_code} {r.text}')
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user_id: str = str(update.effective_user.id)
     text: str = update.message.text
 
     if text.startswith("https://"):
