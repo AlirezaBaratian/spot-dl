@@ -1,17 +1,18 @@
 import requests
 from typing import Dict
+import os
 
-access_token: str = "BQBa1W6QLISQpcqmIzrduxK0Q5MTJYDmH8zZ0lW3KCc5Gw333mnHjgu9rTINZoQTJDpxrJTK-aPnlN9dke0Mk3Dag1KOq7KwMmzU0lb7EzKUJ-6zBYQ"
+access_token: str = os.environ.get("SPOTIFY_ACCESS_TOKEN")
 
 def get_info(str: id) -> None:
     url: str = f"https://api.spotify.com/v1/tracks/{id}"
     headers: Dict = {
-        "Authorization": f"Bearer {access_token}"
+        "Authorization": f"Bearer kos{access_token}"
     }
 
     r = requests.get(url=url, headers=headers)
 
-    print(type(r.json()), r.json()["album"]["images"][0]["url"], r.json()["artists"][0]["name"], r.json()["name"])
+    print(f"HTTP {r.status_code} {r.text}")
 
 def get_id(url: str) -> str:
     url_list: list = url.split("://")[1].split("/")

@@ -6,12 +6,14 @@ from typing import Dict
 from dotenv import load_dotenv
 import os
 from typing import Dict
+import auth
 
 load_dotenv()
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-access_token = os.environ.get("SPOTIFY_ACCESS_TOKEN")
+
+access_token = auth.auth()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     first_name = update.effective_user.first_name
@@ -33,6 +35,7 @@ def get_id(url: str) -> str:
     return id
 
 def get_info(id: str) -> bool | Dict:
+    global access_token
     url: str = f"https://api.spotify.com/v1/tracks/{id}"
     headers: Dict = {
         "Authorization": f"Bearer {access_token}"
@@ -42,6 +45,10 @@ def get_info(id: str) -> bool | Dict:
 
     if r.status_code == 200:
         return r.json()
+    elif r.status_code == 401:
+        access_token = auth.auth()
+        auth.refresh_token(access_token)
+        get_info(id)
     else:
         return False
     
@@ -66,7 +73,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         id:str = get_id(url)
 
         if not get_info(id):
-            await send_error(context, update)
+            await send_error(update, context)
         else:
             await send_track_info(update, context, track_data=parse_track_data(get_info(id)))
     else:
