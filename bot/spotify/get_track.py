@@ -1,10 +1,10 @@
 import requests
 
-access_token: str = "BQBtg6O9hTifZ396SHepfTbbkgA1wFFkR35YFrZ8PJKyVgSo44OIGEoXh0vuOS8VZTWCGGebTlIoWPPQmIpzUbovJyXWPZAzTvEAx5jci9U7nt6UbQ8"
+access_token: str = "BQD5dND7YK0EvtkuLwucnNlaKwfhZgMlXJGNGsTynG5KqqzoGmkZgoSCHMJ1-I00I9Y0-ENLqFfJLtEnxiR9QN2PWueI3sVkiklTcWPhFjj99sf-PiY"
 
 def get_info() -> None:
     url: str = "https://api.spotify.com/v1/tracks/7aUuoq4oMfLxaLa5GVUDHi"
-    headers: Dict = {
+    headers = {
         "Authorization": f"Bearer {access_token}"
     }
 
