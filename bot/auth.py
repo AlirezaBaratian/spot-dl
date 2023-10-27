@@ -34,4 +34,3 @@ def refresh_token(acees_token: str) -> None:
         env_file.writelines(lines)
 
 access_token = auth()
-print(auth())
