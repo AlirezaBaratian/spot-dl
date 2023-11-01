@@ -67,7 +67,7 @@ def parse_track_data(track_data: Dict)-> Dict:
     }
 
 async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: Dict ={}) -> None:
-    name: str = track_data["name"]
+    title: str = track_data["name"]
     artist: str = track_data["artist"]
     album: str = track_data["album"]
     photo_url: str = track_data["image"]
@@ -75,19 +75,38 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
     duration_minutes: int = int((int(track_data["duration"]) / 1000) // 60)
     duration_seconds: int = int(int(track_data["duration"]) / 1000 % 60)
     id: str = track_data["id"]
+    youtube_url: str = f"https://youtube.com/watch?v={serach_youtube(artist, title)}"
 
     await update.message.reply_photo(photo_url, caption=f"""
-🎧 Title: <b>{name}</b>
+🎧 Title: <b>{title}</b>
 🎤 Artist: <b>{artist}</b> 
 💿 Album: <b>{album}</b>
 🚀 Release Date: <code>{realese_date}</code>
 ⏱ Duration: <b>{duration_minutes}m {duration_seconds}s</b>
 🆔 ID: <code>{id}</code>
+▶️ YouTube URL: {youtube_url}
 """, parse_mode="HTML", reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
 
 async def send_audio_preview(update: Update, context: ContextTypes.DEFAULT_TYPE, preview_url: str):
     caption: str = "🎤 Here's a preview."
     await update.message.reply_voice(preview_url, caption=caption, reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
+
+def serach_youtube(artist: str, title: str) -> str:
+    url: str = "https://www.googleapis.com/youtube/v3/search"
+    api_key: str = os.getenv("YOUTUBE_API_KEY")
+    qeury: str = f"{artist} {title}"
+
+    params = {
+        "key": api_key,
+        "part": "snippet",
+        "q": qeury,
+        "maxResults": 5
+    }
+
+    r = requests.get(url, params=params)
+    
+    if r.status_code == 200:
+        return r.json()["items"][0]["id"]["videoId"]
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text: str = update.message.text
@@ -111,6 +130,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 bot_token: str = os.getenv("BOT_TOKEN")
 app = ApplicationBuilder().token(bot_token).build()
 
+# proxy_url = "http://127.0.0.1:2080"
+# app = ApplicationBuilder().token(bot_token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
+app = ApplicationBuilder().token(bot_token).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT &  ~filters.COMMAND, handle_text))
 
