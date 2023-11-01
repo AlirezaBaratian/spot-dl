@@ -109,8 +109,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             await wrong_text(update, context)
 
 bot_token: str = os.getenv("BOT_TOKEN")
-proxy_url: str = "http://127.0.0.1:2080"
-app = ApplicationBuilder().token(bot_token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
+app = ApplicationBuilder().token(bot_token).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT &  ~filters.COMMAND, handle_text))
