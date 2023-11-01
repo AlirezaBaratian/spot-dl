@@ -14,7 +14,9 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 access_token = auth.auth()
 
-main_menu: List = [["🪀 Get Music Data"]]
+commands: List = ["🎧 Preview Music"]
+
+main_menu: List = [commands]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     first_name = update.effective_user.first_name
@@ -73,7 +75,6 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
     duration_minutes: int = int((int(track_data["duration"]) / 1000) // 60)
     duration_seconds: int = int(int(track_data["duration"]) / 1000 % 60)
     id: str = track_data["id"]
-    preview_url: str = track_data["preview_url"]
 
     await update.message.reply_photo(photo_url, caption=f"""
 🎧 Title: <b>{name}</b>
@@ -83,7 +84,10 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
 ⏱ Duration: <b>{duration_minutes}m {duration_seconds}s</b>
 🆔 ID: <code>{id}</code>
 """, parse_mode="HTML", reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
-    await update.message.reply_voice(preview_url)
+
+async def send_audio_preview(update: Update, context: ContextTypes.DEFAULT_TYPE, preview_url: str):
+    caption: str = "🎤 Here's a preview."
+    await update.message.reply_voice(preview_url, caption=caption, reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text: str = update.message.text
@@ -95,15 +99,18 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         if not get_info(id):
             await send_error(update, context)
         else:
-            await send_track_info(update, context, track_data=parse_track_data(get_info(id)))
+            track_data: Dict = parse_track_data(get_info(id))
+            await send_track_info(update, context, track_data=track_data)
+            await send_audio_preview(update, context, preview_url=track_data["preview_url"])
     else:
-        if text == "🪀 Get Music Data":
+        if text == commands[0]:
             await get_url_prompt(update, context)
         else:
             await wrong_text(update, context)
 
 bot_token: str = os.getenv("BOT_TOKEN")
-app = ApplicationBuilder().token(bot_token).build()
+proxy_url: str = "http://127.0.0.1:2080"
+app = ApplicationBuilder().token(bot_token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
 
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT &  ~filters.COMMAND, handle_text))
