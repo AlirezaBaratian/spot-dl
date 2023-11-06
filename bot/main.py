@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from typing import Dict, List
 import auth
+import yt_dlp
 
 load_dotenv()
 
@@ -66,6 +67,24 @@ def parse_track_data(track_data: Dict)-> Dict:
         "preview_url": track_data["preview_url"]
     }
 
+def downlaod_audio(url: str) -> str:
+
+    ydl_opts = {
+        'format': 'm4a/bestaudio/best',
+        # ℹ️ See help(yt_dlp.postprocessor) for a list of available Postprocessors and their arguments
+        'postprocessors': [{  # Extract audio using ffmpeg
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'm4a',
+        }]
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        # Get the downloaded file name from the info_dict
+        downloaded_file_name = info_dict['title'] + '.m4a'
+        print(f"Downloaded: {downloaded_file_name}")
+        return downloaded_file_name
+
 async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: Dict ={}) -> None:
     title: str = track_data["name"]
     artist: str = track_data["artist"]
@@ -86,6 +105,7 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
 🆔 ID: <code>{id}</code>
 ▶️ YouTube URL: {youtube_url}
 """, parse_mode="HTML", reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
+    await update.message.reply_audio(downlaod_audio(youtube_url))
 
 async def send_audio_preview(update: Update, context: ContextTypes.DEFAULT_TYPE, preview_url: str):
     caption: str = "🎤 Here's a preview."
