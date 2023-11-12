@@ -4,7 +4,6 @@ import requests
 import logging
 from dotenv import load_dotenv
 import os
-from typing import Dict, List
 import auth
 import yt_dlp
 
@@ -15,9 +14,9 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 access_token = auth.auth()
 
-commands: List = ["🎧 Preview Music"]
+commands: list = ["🎧 Preview Music"]
 
-main_menu: List = [commands]
+main_menu: list = [commands]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     first_name = update.effective_user.first_name
@@ -38,10 +37,10 @@ def get_id(url: str) -> str:
     id: str = url_list[2].split("?")[0]
     return id
 
-def get_info(id: str) -> bool | Dict:
+def get_info(id: str) -> bool | dict:
     global access_token
     url: str = f"https://api.spotify.com/v1/tracks/{id}"
-    headers: Dict = {
+    headers: dict = {
         "Authorization": f"Bearer {access_token}"
     }
 
@@ -55,7 +54,7 @@ def get_info(id: str) -> bool | Dict:
     else:
         return False
     
-def parse_track_data(track_data: Dict)-> Dict:
+def parse_track_data(track_data: dict)-> dict:
     return {
         "name": track_data["name"],
         "artist": track_data["artists"][0]["name"],
@@ -85,7 +84,7 @@ def downlaod_audio(url: str) -> str:
         print(f"Downloaded: {downloaded_file_name}")
         return downloaded_file_name
 
-async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: Dict ={}) -> None:
+async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: dict ={}) -> None:
     title: str = track_data["name"]
     artist: str = track_data["artist"]
     album: str = track_data["album"]
@@ -105,7 +104,6 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
 🆔 ID: <code>{id}</code>
 ▶️ YouTube URL: {youtube_url}
 """, parse_mode="HTML", reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
-    await update.message.reply_audio(downlaod_audio(youtube_url))
 
 async def send_audio_preview(update: Update, context: ContextTypes.DEFAULT_TYPE, preview_url: str):
     caption: str = "🎤 Here's a preview."
@@ -138,7 +136,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         if not get_info(id):
             await send_error(update, context)
         else:
-            track_data: Dict = parse_track_data(get_info(id))
+            track_data: dict = parse_track_data(get_info(id))
             await send_track_info(update, context, track_data=track_data)
             await send_audio_preview(update, context, preview_url=track_data["preview_url"])
     else:
@@ -150,8 +148,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 bot_token: str = os.getenv("BOT_TOKEN")
 app = ApplicationBuilder().token(bot_token).build()
 
-# proxy_url = "http://127.0.0.1:2080"
-# app = ApplicationBuilder().token(bot_token).proxy_url(proxy_url).get_updates_proxy_url(proxy_url).build()
 app = ApplicationBuilder().token(bot_token).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT &  ~filters.COMMAND, handle_text))
