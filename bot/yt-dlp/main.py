@@ -14,3 +14,6 @@ def downlaod_audio(url):
         info_dict = ydl.extract_info(url, download=True)
         downloaded_file_name = info_dict['title'] + '.m4a'
         print(f"Downloaded: {downloaded_file_name}")
+
+url = "https://youtube.com/watch?v=dQw4w9WgXcQ"
+downlaod_audio(url)

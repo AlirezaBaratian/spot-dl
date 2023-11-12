@@ -82,6 +82,7 @@ def downlaod_audio(url: str) -> str:
         # Get the downloaded file name from the info_dict
         downloaded_file_name = info_dict['title'] + '.m4a'
         print(f"Downloaded: {downloaded_file_name}")
+        print(downloaded_file_name)
         return downloaded_file_name
 
 async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, track_data: dict ={}) -> None:
@@ -107,7 +108,7 @@ async def send_track_info(update: Update, context: ContextTypes.DEFAULT_TYPE, tr
 
 async def send_audio_preview(update: Update, context: ContextTypes.DEFAULT_TYPE, preview_url: str):
     caption: str = "🎤 Here's a preview."
-    await update.message.reply_voice(preview_url, caption=caption, reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
+    await update.message.reply_audio(preview_url, caption=caption, reply_markup=ReplyKeyboardMarkup(main_menu, True, True, False, "Select an option:", False))
 
 def serach_youtube(artist: str, title: str) -> str:
     url: str = "https://www.googleapis.com/youtube/v3/search"
@@ -139,6 +140,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             track_data: dict = parse_track_data(get_info(id))
             await send_track_info(update, context, track_data=track_data)
             await send_audio_preview(update, context, preview_url=track_data["preview_url"])
+            downlaod_audio(track_data["preview_url"])
     else:
         if text == commands[0]:
             await get_url_prompt(update, context)
@@ -148,7 +150,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 bot_token: str = os.getenv("BOT_TOKEN")
 app = ApplicationBuilder().token(bot_token).build()
 
-app = ApplicationBuilder().token(bot_token).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT &  ~filters.COMMAND, handle_text))
 

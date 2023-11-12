@@ -20,6 +20,8 @@ def auth() -> str:
 
     if r.status_code == 200:
         return r.json()["access_token"]
+    else:
+        print(f"HTTP/{r.status_code} {r.text}")
         
 def refresh_token(acees_token: str) -> None:
     env_path: str = ".env"
@@ -32,5 +34,3 @@ def refresh_token(acees_token: str) -> None:
                 break
     with open(env_path, 'w') as env_file:
         env_file.writelines(lines)
-
-access_token = auth()
